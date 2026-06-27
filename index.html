@@ -119,6 +119,10 @@
       background: #dc2626;
     }
 
+    button.camera-on {
+      background: #16a34a;
+    }
+
     button:active {
       transform: scale(0.98);
     }
@@ -128,6 +132,22 @@
       grid-template-columns: 1fr 1fr;
       gap: 8px;
       margin-top: 12px;
+    }
+
+    .sheet-link {
+      margin-top: 10px;
+      display: none;
+    }
+
+    .sheet-link a {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      background: #059669;
+      color: #ffffff;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: bold;
     }
 
     .small-note {
@@ -342,11 +362,14 @@
         <button class="secondary" onclick="downloadCSV()">CSV Download</button>
         <button onclick="saveToGoogleSheet()">Save to Sheet</button>
         <button class="danger" onclick="clearHistory()">Clear History</button>
-        <button class="secondary" onclick="restartCamera()">Restart Camera</button>
+        <button id="cameraToggleBtn" class="secondary" onclick="toggleCamera()">Close Camera</button>
       </div>
 
+      <div id="sheetLinkBox" class="sheet-link"></div>
+
       <div class="small-note">
-        Sheet data: Barcode Column A / SKU Column B / Daily Stock Column K / Available Column M
+        Sheet data: Barcode Column A / SKU Column B / Daily Stock Column K / Available Column M<br>
+        Save to Sheet နှိပ်ရင် မူရင်း Google Sheet ထဲက Quantity_History tab ထဲမှာ သိမ်းပါတယ်။
       </div>
     </div>
 
@@ -371,11 +394,11 @@
   </div>
 
   <script>
-    // ဒီနေရာမှာ Apps Script Web App URL ထည့်ပါ
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxMeFruVmQjFFsMSihP6hrQcu_FWmEei_VTvVin06y68E3qmvthVvUjY-8H2X2IiYh/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzxMeFruVmQjFFsMSihP6hrQcu_FWmEei_VTvVin06y68E3qmvthVvUjY-8H2X2IiYh/exec";
 
     let html5QrCode = null;
-    let isScanning = false;
+    let isCameraOn = false;
+    let isLookupBusy = false;
 
     let lastCode = "";
     let lastScanTime = 0;
@@ -397,19 +420,50 @@
       return d.toLocaleString();
     }
 
-    function barcodeImageUrl(code) {
-      const value = String(code || "").trim();
+    function setSheetLink(url) {
+      const box = document.getElementById("sheetLinkBox");
 
-      return "https://bwipjs-api.metafloor.com/?" +
-        "bcid=code128" +
-        "&text=" + encodeURIComponent(value) +
-        "&scale=3" +
-        "&height=12" +
-        "&includetext";
+      if (!url) {
+        box.style.display = "none";
+        box.innerHTML = "";
+        return;
+      }
+
+      box.style.display = "block";
+      box.innerHTML = `
+        <a href="${escapeHtml(url)}" target="_blank" rel="noopener">
+          Open Saved Sheet
+        </a>
+      `;
+    }
+
+    function updateCameraButton() {
+      const btn = document.getElementById("cameraToggleBtn");
+
+      if (isCameraOn) {
+        btn.textContent = "Close Camera";
+        btn.className = "secondary";
+      } else {
+        btn.textContent = "Open Camera";
+        btn.className = "camera-on";
+      }
+    }
+
+    async function toggleCamera() {
+      if (isCameraOn) {
+        await stopCamera();
+      } else {
+        await startCamera();
+      }
     }
 
     async function startCamera() {
       try {
+        if (isCameraOn) return;
+
+        document.getElementById("reader").style.display = "block";
+        document.getElementById("reader").innerHTML = "";
+
         html5QrCode = new Html5Qrcode("reader");
 
         const config = {
@@ -442,24 +496,43 @@
           function() {}
         );
 
-        isScanning = true;
+        isCameraOn = true;
+        updateCameraButton();
         setStatus("Camera ready. Barcode / QR ကို scan လုပ်ပါ။", "success");
 
       } catch (err) {
+        isCameraOn = false;
+        html5QrCode = null;
+        updateCameraButton();
         setStatus("Camera open မရပါ။ Browser camera permission စစ်ပါ။ " + err, "error");
       }
     }
 
-    async function restartCamera() {
+    async function stopCamera() {
       try {
-        if (html5QrCode && isScanning) {
+        if (html5QrCode && isCameraOn) {
           await html5QrCode.stop();
-          isScanning = false;
-        }
-      } catch (e) {}
 
-      document.getElementById("reader").innerHTML = "";
-      startCamera();
+          try {
+            await html5QrCode.clear();
+          } catch (e) {}
+        }
+
+        html5QrCode = null;
+        isCameraOn = false;
+
+        document.getElementById("reader").innerHTML = "";
+        document.getElementById("reader").style.display = "none";
+
+        updateCameraButton();
+        setStatus("Camera closed. ပြန်ဖွင့်ချင်ရင် Open Camera နှိပ်ပါ။", "success");
+
+      } catch (err) {
+        html5QrCode = null;
+        isCameraOn = false;
+        updateCameraButton();
+        setStatus("Camera close error: " + err.message, "error");
+      }
     }
 
     function onScanSuccess(decodedText) {
@@ -468,7 +541,8 @@
 
       if (!code) return;
 
-      // တူတဲ့ barcode ကို အရမ်းမြန်မြန် double scan မဖြစ်အောင်
+      if (isLookupBusy) return;
+
       if (code === lastCode && now - lastScanTime < 1800) {
         return;
       }
@@ -498,13 +572,25 @@
       lookupAndAdd(code);
     }
 
+    function barcodeImageUrl(code) {
+      const value = String(code || "").trim();
+
+      return "https://bwipjs-api.metafloor.com/?" +
+        "bcid=code128" +
+        "&text=" + encodeURIComponent(value) +
+        "&scale=3" +
+        "&height=12" +
+        "&includetext";
+    }
+
     async function lookupAndAdd(code) {
       try {
-        if (!API_URL || API_URL.includes("PASTE_YOUR_APPS_SCRIPT")) {
-          setStatus("API_URL ထဲမှာ Apps Script Web App URL ထည့်ပါ။", "error");
+        if (!API_URL) {
+          setStatus("API_URL မရှိပါ။ Apps Script Web App URL ထည့်ပါ။", "error");
           return;
         }
 
+        isLookupBusy = true;
         setStatus("Searching sheet data: " + code);
 
         const url = API_URL + "?action=lookup&code=" + encodeURIComponent(code);
@@ -538,6 +624,10 @@
 
       } catch (err) {
         setStatus("Apps Script connection error: " + err.message, "error");
+      } finally {
+        setTimeout(function() {
+          isLookupBusy = false;
+        }, 700);
       }
     }
 
@@ -571,7 +661,7 @@
 
               <div class="barcode-wrap">
                 <div class="barcode-label">SCAN CODE</div>
-                <img class="barcode-img" src="${barcodeUrl}" alt="Scan code">
+                <img class="barcode-img" src="${escapeHtml(barcodeUrl)}" alt="Scan code">
               </div>
 
               <div class="info">
@@ -601,6 +691,7 @@
         const qty = Number(item.qty || 1);
 
         if (!sku) return;
+
         map[sku] = (map[sku] || 0) + qty;
       });
 
@@ -681,6 +772,7 @@
 
       a.href = URL.createObjectURL(blob);
       a.download = "quantity_scan_history.csv";
+
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -695,12 +787,8 @@
       }
 
       try {
-        if (!API_URL || API_URL.includes("PASTE_YOUR_APPS_SCRIPT")) {
-          setStatus("API_URL ထဲမှာ Apps Script Web App URL ထည့်ပါ။", "error");
-          return;
-        }
-
         setStatus("Saving to Google Sheet...");
+        setSheetLink("");
 
         const payload = JSON.stringify({ history: history });
 
@@ -720,7 +808,16 @@
           return;
         }
 
-        setStatus("Saved to Google Sheet: " + data.savedRows + " rows", "success");
+        const openUrl = data.historySheetUrl || data.spreadsheetUrl || "";
+
+        setStatus(
+          "Saved: " + data.savedRows + " rows / Tab: " + (data.sheetName || "Quantity_History"),
+          "success"
+        );
+
+        if (openUrl) {
+          setSheetLink(openUrl);
+        }
 
       } catch (err) {
         setStatus("Save error: " + err.message, "error");
@@ -735,6 +832,7 @@
       history = [];
       saveLocal();
       renderAll();
+      setSheetLink("");
       setStatus("History cleared.", "success");
     }
 
@@ -781,6 +879,7 @@
     }
 
     renderAll();
+    updateCameraButton();
     startCamera();
   </script>
 </body>
