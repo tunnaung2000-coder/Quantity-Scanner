@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Quantity Scanner App</title>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6fb;
+      color: #111827;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #ffffff;
+    }
+
+    .header {
+      padding: 18px 16px;
+      background: linear-gradient(135deg, #0f172a, #1d4ed8);
+      color: #ffffff;
+      border-bottom-left-radius: 22px;
+      border-bottom-right-radius: 22px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .header p {
+      margin: 6px 0 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .section {
+      padding: 14px 16px;
+    }
+
+    #reader {
+      width: 100%;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 2px solid #dbeafe;
+      background: #000;
+    }
+
+    .status {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      font-size: 14px;
+      background: #eff6ff;
+      color: #1e40af;
+      min-height: 44px;
+    }
+
+    .status.error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .status.success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .manual-box {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .manual-box input {
+      flex: 1;
+      padding: 13px;
+      font-size: 16px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      outline: none;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    button.secondary {
+      background: #0f172a;
+    }
+
+    button.danger {
+      background: #dc2626;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .summary {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .summary-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: 1fr 70px;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 13px;
+    }
+
+    .summary-row:last-child {
+      border-bottom: none;
+    }
+
+    .summary-row .total {
+      text-align: center;
+      font-weight: bold;
+      color: #1d4ed8;
+    }
+
+    .history-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .card {
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .no {
+      background: #1d4ed8;
+      color: #ffffff;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 13px;
+      flex: 0 0 auto;
+    }
+
+    .sku {
+      flex: 1;
+      font-weight: bold;
+      font-size: 14px;
+      word-break: break-word;
+    }
+
+    .qty {
+      background: #dcfce7;
+      color: #166534;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .info {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 6px;
+      font-size: 13px;
+      color: #334155;
+    }
+
+    .label {
+      color: #64748b;
+    }
+
+    .empty {
+      text-align: center;
+      color: #64748b;
+      padding: 30px 10px;
+      font-size: 14px;
+    }
+
+    .small-note {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>Quantity Scanner App</h1>
+      <p>Scan Barcode / QR and save quantity history</p>
+    </div>
+
+    <div class="section">
+      <div id="reader"></div>
+
+      <div id="status" class="status">
+        Camera starting...
+      </div>
+
+      <div class="manual-box">
+        <input id="manualCode" type="text" inputmode="numeric" placeholder="Manual barcode input" />
+        <button onclick="manualScan()">Scan</button>
+      </div>
+
+      <div class="actions">
+        <button class="secondary" onclick="downloadCSV()">CSV Download</button>
+        <button onclick="saveToGoogleSheet()">Save to Sheet</button>
+        <button class="danger" onclick="clearHistory()">Clear History</button>
+        <button class="secondary" onclick="restartCamera()">Restart Camera</button>
+      </div>
+
+      <div class="small-note">
+        Data source: Barcode Column A, SKU Column B, Daily Stock Column K, Available Column M
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="summary">
+        <div class="summary-title">
+          <span>TO EACH SKU</span>
+          <span>AUTO TOTAL NUMBER</span>
+        </div>
+        <div id="summaryList"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="history-title">
+        <span>Scan History</span>
+        <span id="historyCount">0</span>
+      </div>
+
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzxMeFruVmQjFFsMSihP6hrQcu_FWmEei_VTvVin06y68E3qmvthVvUjY-8H2X2IiYh/exec";
+
+    let html5QrCode = null;
+    let isScanning = false;
+    let lastCode = "";
+    let lastScanTime = 0;
+
+    let history = JSON.parse(localStorage.getItem("quantity_history") || "[]");
+
+    function setStatus(message, type = "") {
+      const el = document.getElementById("status");
+      el.className = "status " + type;
+      el.textContent = message;
+    }
+
+    function saveLocal() {
+      localStorage.setItem("quantity_history", JSON.stringify(history));
+    }
+
+    function nowText() {
+      const d = new Date();
+      return d.toLocaleString();
+    }
+
+    async function startCamera() {
+      try {
+        html5QrCode = new Html5Qrcode("reader");
+
+        const config = {
+          fps: 10,
+          qrbox: function(viewfinderWidth, viewfinderHeight) {
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            const size = Math.floor(minEdge * 0.78);
+            return {
+              width: size,
+              height: Math.floor(size * 0.55)
+            };
+          },
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E
+          ]
+        };
+
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          config,
+          onScanSuccess,
+          function() {}
+        );
+
+        isScanning = true;
+        setStatus("Camera ready. Barcode / QR ကို scan လုပ်ပါ။", "success");
+
+      } catch (err) {
+        setStatus("Camera open မရပါ။ Browser permission စစ်ပါ။ " + err, "error");
+      }
+    }
+
+    async function restartCamera() {
+      try {
+        if (html5QrCode && isScanning) {
+          await html5QrCode.stop();
+          isScanning = false;
+        }
+      } catch (e) {}
+
+      document.getElementById("reader").innerHTML = "";
+      startCamera();
+    }
+
+    function onScanSuccess(decodedText) {
+      const code = String(decodedText || "").trim();
+      const now = Date.now();
+
+      if (!code) return;
+
+      if (code === lastCode && now - lastScanTime < 1800) {
+        return;
+      }
+
+      lastCode = code;
+      lastScanTime = now;
+
+      lookupAndAdd(code);
+    }
+
+    function manualScan() {
+      const input = document.getElementById("manualCode");
+      const code = input.value.trim();
+
+      if (!code) {
+        setStatus("Barcode ထည့်ပါ။", "error");
+        return;
+      }
+
+      input.value = "";
+      lookupAndAdd(code);
+    }
+
+    async function lookupAndAdd(code) {
+      try {
+        setStatus("Searching sheet data: " + code);
+
+        const url = API_URL + "?action=lookup&code=" + encodeURIComponent(code);
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!data.ok || !data.found) {
+          setStatus(data.message || "Barcode not found.", "error");
+          vibrateError();
+          return;
+        }
+
+        const item = {
+          no: history.length + 1,
+          barcode: data.barcode || code,
+          sku: data.sku || "",
+          dailyStock: data.dailyStock || "",
+          available: data.available || "",
+          qty: 1,
+          scanTime: nowText()
+        };
+
+        history.push(item);
+        saveLocal();
+        renderAll();
+
+        setStatus("Added: " + item.sku, "success");
+        beep();
+        vibrateSuccess();
+
+      } catch (err) {
+        setStatus("Apps Script connection error: " + err.message, "error");
+      }
+    }
+
+    function renderAll() {
+      renderHistory();
+      renderSummary();
+      document.getElementById("historyCount").textContent = history.length;
+    }
+
+    function renderHistory() {
+      const list = document.getElementById("historyList");
+
+      if (history.length === 0) {
+        list.innerHTML = '<div class="empty">No scan history yet.</div>';
+        return;
+      }
+
+      list.innerHTML = history
+        .slice()
+        .reverse()
+        .map(item => `
+          <div class="card">
+            <div class="card-top">
+              <div class="no">${item.no}</div>
+              <div class="sku">${escapeHtml(item.sku)}</div>
+              <div class="qty">QTY ${item.qty}</div>
+            </div>
+
+            <div class="info">
+              <div class="label">BARCODE</div>
+              <div>${escapeHtml(item.barcode)}</div>
+
+              <div class="label">Daily Stock</div>
+              <div>${escapeHtml(item.dailyStock)}</div>
+
+              <div class="label">Available</div>
+              <div>${escapeHtml(item.available)}</div>
+
+              <div class="label">Scan Time</div>
+              <div>${escapeHtml(item.scanTime)}</div>
+            </div>
+          </div>
+        `)
+        .join("");
+    }
+
+    function getSummary() {
+      const map = {};
+
+      history.forEach(item => {
+        const sku = item.sku || "";
+        const qty = Number(item.qty || 1);
+
+        if (!sku) return;
+        map[sku] = (map[sku] || 0) + qty;
+      });
+
+      return Object.keys(map).map(sku => ({
+        sku,
+        total: map[sku]
+      }));
+    }
+
+    function renderSummary() {
+      const list = document.getElementById("summaryList");
+      const summary = getSummary();
+
+      if (summary.length === 0) {
+        list.innerHTML = '<div class="empty">No SKU summary yet.</div>';
+        return;
+      }
+
+      list.innerHTML = summary.map(item => `
+        <div class="summary-row">
+          <div>${escapeHtml(item.sku)}</div>
+          <div class="total">${item.total}</div>
+        </div>
+      `).join("");
+    }
+
+    function downloadCSV() {
+      if (history.length === 0) {
+        setStatus("Download လုပ်ဖို့ history မရှိသေးပါ။", "error");
+        return;
+      }
+
+      const summary = getSummary();
+      const maxRows = Math.max(history.length, summary.length);
+
+      const rows = [];
+      rows.push([
+        "No",
+        "BARCODE",
+        "PRODUCT",
+        "DAILY STOCK",
+        "AVAILABLE",
+        "QTY",
+        "SCAN TIME",
+        "",
+        "TO EACH SKU",
+        "AUTO TOTAL NUMBER"
+      ]);
+
+      for (let i = 0; i < maxRows; i++) {
+        const item = history[i] || {};
+        const sum = summary[i] || {};
+
+        rows.push([
+          item.no || "",
+          item.barcode || "",
+          item.sku || "",
+          item.dailyStock || "",
+          item.available || "",
+          item.qty || "",
+          item.scanTime || "",
+          "",
+          sum.sku || "",
+          sum.total || ""
+        ]);
+      }
+
+      const csv = rows.map(row =>
+        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      ).join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "quantity_scan_history.csv";
+      a.click();
+
+      setStatus("CSV downloaded.", "success");
+    }
+
+    async function saveToGoogleSheet() {
+      if (history.length === 0) {
+        setStatus("Save လုပ်ဖို့ history မရှိသေးပါ။", "error");
+        return;
+      }
+
+      try {
+        setStatus("Saving to Google Sheet...");
+
+        const payload = JSON.stringify({ history });
+
+        const form = new URLSearchParams();
+        form.append("action", "saveHistory");
+        form.append("payload", payload);
+
+        const res = await fetch(API_URL, {
+          method: "POST",
+          body: form
+        });
+
+        const data = await res.json();
+
+        if (!data.ok) {
+          setStatus(data.message || "Save failed.", "error");
+          return;
+        }
+
+        setStatus("Saved to Google Sheet: " + data.savedRows + " rows", "success");
+
+      } catch (err) {
+        setStatus("Save error: " + err.message, "error");
+      }
+    }
+
+    function clearHistory() {
+      if (!confirm("Scan history အကုန်ဖျက်မလား?")) return;
+
+      history = [];
+      saveLocal();
+      renderAll();
+      setStatus("History cleared.", "success");
+    }
+
+    function beep() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        oscillator.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        oscillator.frequency.value = 900;
+        gain.gain.value = 0.12;
+
+        oscillator.start();
+        setTimeout(() => {
+          oscillator.stop();
+          audioCtx.close();
+        }, 120);
+      } catch (e) {}
+    }
+
+    function vibrateSuccess() {
+      if (navigator.vibrate) navigator.vibrate(80);
+    }
+
+    function vibrateError() {
+      if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
+    }
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    renderAll();
+    startCamera();
+  </script>
+</body>
+</html>
