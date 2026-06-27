@@ -16,34 +16,36 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f4f6fb;
+      background: #f3f6fb;
       color: #111827;
     }
 
     .app {
-      max-width: 520px;
+      max-width: 560px;
       margin: 0 auto;
       min-height: 100vh;
       background: #ffffff;
+      box-shadow: 0 0 20px rgba(15, 23, 42, 0.08);
     }
 
     .header {
       padding: 18px 16px;
-      background: linear-gradient(135deg, #0f172a, #1d4ed8);
+      background: linear-gradient(135deg, #0f172a, #2563eb);
       color: #ffffff;
-      border-bottom-left-radius: 22px;
-      border-bottom-right-radius: 22px;
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
     }
 
     .header h1 {
       margin: 0;
       font-size: 22px;
+      line-height: 1.2;
     }
 
     .header p {
       margin: 6px 0 0;
-      opacity: 0.9;
       font-size: 14px;
+      opacity: 0.9;
     }
 
     .section {
@@ -52,10 +54,10 @@
 
     #reader {
       width: 100%;
-      overflow: hidden;
       border-radius: 18px;
+      overflow: hidden;
       border: 2px solid #dbeafe;
-      background: #000;
+      background: #000000;
     }
 
     .status {
@@ -66,16 +68,17 @@
       background: #eff6ff;
       color: #1e40af;
       min-height: 44px;
-    }
-
-    .status.error {
-      background: #fee2e2;
-      color: #991b1b;
+      line-height: 1.4;
     }
 
     .status.success {
       background: #dcfce7;
       color: #166534;
+    }
+
+    .status.error {
+      background: #fee2e2;
+      color: #991b1b;
     }
 
     .manual-box {
@@ -91,6 +94,10 @@
       border: 1px solid #cbd5e1;
       border-radius: 12px;
       outline: none;
+    }
+
+    .manual-box input:focus {
+      border-color: #2563eb;
     }
 
     button {
@@ -112,11 +119,22 @@
       background: #dc2626;
     }
 
+    button:active {
+      transform: scale(0.98);
+    }
+
     .actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
       margin-top: 12px;
+    }
+
+    .small-note {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
     }
 
     .summary {
@@ -127,18 +145,20 @@
     }
 
     .summary-title {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 1fr 90px;
+      gap: 8px;
       align-items: center;
+      font-size: 13px;
       font-weight: bold;
       margin-bottom: 8px;
     }
 
     .summary-row {
       display: grid;
-      grid-template-columns: 1fr 70px;
+      grid-template-columns: 1fr 90px;
       gap: 8px;
-      padding: 8px 0;
+      padding: 9px 0;
       border-bottom: 1px solid #e5e7eb;
       font-size: 13px;
     }
@@ -147,10 +167,15 @@
       border-bottom: none;
     }
 
+    .summary-row .sku-text {
+      word-break: break-word;
+    }
+
     .summary-row .total {
       text-align: center;
       font-weight: bold;
       color: #1d4ed8;
+      font-size: 15px;
     }
 
     .history-title {
@@ -159,6 +184,14 @@
       align-items: center;
       margin-bottom: 10px;
       font-weight: bold;
+    }
+
+    .history-count {
+      background: #dbeafe;
+      color: #1d4ed8;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 13px;
     }
 
     .card {
@@ -172,7 +205,6 @@
 
     .card-top {
       display: flex;
-      justify-content: space-between;
       gap: 8px;
       align-items: center;
       margin-bottom: 8px;
@@ -197,6 +229,7 @@
       font-weight: bold;
       font-size: 14px;
       word-break: break-word;
+      color: #0f172a;
     }
 
     .qty {
@@ -206,11 +239,38 @@
       border-radius: 999px;
       font-weight: bold;
       font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .barcode-wrap {
+      margin: 10px 0;
+      padding: 8px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      background: #ffffff;
+      text-align: center;
+    }
+
+    .barcode-label {
+      font-size: 12px;
+      font-weight: bold;
+      color: #334155;
+      margin-bottom: 4px;
+    }
+
+    .barcode-img {
+      width: 100%;
+      max-width: 310px;
+      height: 62px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+      background: #ffffff;
     }
 
     .info {
       display: grid;
-      grid-template-columns: 100px 1fr;
+      grid-template-columns: 105px 1fr;
       gap: 6px;
       font-size: 13px;
       color: #334155;
@@ -218,20 +278,37 @@
 
     .label {
       color: #64748b;
+      font-weight: bold;
+    }
+
+    .value {
+      word-break: break-word;
     }
 
     .empty {
       text-align: center;
       color: #64748b;
-      padding: 30px 10px;
+      padding: 28px 10px;
       font-size: 14px;
     }
 
-    .small-note {
-      font-size: 12px;
-      color: #64748b;
-      margin-top: 8px;
-      line-height: 1.4;
+    @media (max-width: 380px) {
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-title,
+      .summary-row {
+        grid-template-columns: 1fr 70px;
+      }
+
+      .info {
+        grid-template-columns: 92px 1fr;
+      }
+
+      .barcode-img {
+        height: 58px;
+      }
     }
   </style>
 </head>
@@ -251,7 +328,13 @@
       </div>
 
       <div class="manual-box">
-        <input id="manualCode" type="text" inputmode="numeric" placeholder="Manual barcode input" />
+        <input
+          id="manualCode"
+          type="text"
+          inputmode="numeric"
+          placeholder="Manual barcode input"
+          onkeydown="manualEnter(event)"
+        />
         <button onclick="manualScan()">Scan</button>
       </div>
 
@@ -263,7 +346,7 @@
       </div>
 
       <div class="small-note">
-        Data source: Barcode Column A, SKU Column B, Daily Stock Column K, Available Column M
+        Sheet data: Barcode Column A / SKU Column B / Daily Stock Column K / Available Column M
       </div>
     </div>
 
@@ -280,7 +363,7 @@
     <div class="section">
       <div class="history-title">
         <span>Scan History</span>
-        <span id="historyCount">0</span>
+        <span id="historyCount" class="history-count">0</span>
       </div>
 
       <div id="historyList"></div>
@@ -288,10 +371,13 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzxMeFruVmQjFFsMSihP6hrQcu_FWmEei_VTvVin06y68E3qmvthVvUjY-8H2X2IiYh/exec";
+    // ဒီနေရာမှာ Apps Script Web App URL ထည့်ပါ
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRWYsTGetWAdwf97IEQuIRuOdeCqB7DU_IFJvS2HvFDBNKN-g3N2U4cGEeFili2EvJ/exec";
+
 
     let html5QrCode = null;
     let isScanning = false;
+
     let lastCode = "";
     let lastScanTime = 0;
 
@@ -312,6 +398,17 @@
       return d.toLocaleString();
     }
 
+    function barcodeImageUrl(code) {
+      const value = String(code || "").trim();
+
+      return "https://bwipjs-api.metafloor.com/?" +
+        "bcid=code128" +
+        "&text=" + encodeURIComponent(value) +
+        "&scale=3" +
+        "&height=12" +
+        "&includetext";
+    }
+
     async function startCamera() {
       try {
         html5QrCode = new Html5Qrcode("reader");
@@ -320,10 +417,12 @@
           fps: 10,
           qrbox: function(viewfinderWidth, viewfinderHeight) {
             const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-            const size = Math.floor(minEdge * 0.78);
+            const width = Math.floor(minEdge * 0.82);
+            const height = Math.floor(width * 0.48);
+
             return {
-              width: size,
-              height: Math.floor(size * 0.55)
+              width: width,
+              height: height
             };
           },
           formatsToSupport: [
@@ -348,7 +447,7 @@
         setStatus("Camera ready. Barcode / QR ကို scan လုပ်ပါ။", "success");
 
       } catch (err) {
-        setStatus("Camera open မရပါ။ Browser permission စစ်ပါ။ " + err, "error");
+        setStatus("Camera open မရပါ။ Browser camera permission စစ်ပါ။ " + err, "error");
       }
     }
 
@@ -370,6 +469,7 @@
 
       if (!code) return;
 
+      // တူတဲ့ barcode ကို အရမ်းမြန်မြန် double scan မဖြစ်အောင်
       if (code === lastCode && now - lastScanTime < 1800) {
         return;
       }
@@ -378,6 +478,12 @@
       lastScanTime = now;
 
       lookupAndAdd(code);
+    }
+
+    function manualEnter(event) {
+      if (event.key === "Enter") {
+        manualScan();
+      }
     }
 
     function manualScan() {
@@ -395,6 +501,11 @@
 
     async function lookupAndAdd(code) {
       try {
+        if (!API_URL || API_URL.includes("PASTE_YOUR_APPS_SCRIPT")) {
+          setStatus("API_URL ထဲမှာ Apps Script Web App URL ထည့်ပါ။", "error");
+          return;
+        }
+
         setStatus("Searching sheet data: " + code);
 
         const url = API_URL + "?action=lookup&code=" + encodeURIComponent(code);
@@ -402,7 +513,7 @@
         const data = await res.json();
 
         if (!data.ok || !data.found) {
-          setStatus(data.message || "Barcode not found.", "error");
+          setStatus(data.message || "Barcode not found in sheet.", "error");
           vibrateError();
           return;
         }
@@ -414,6 +525,7 @@
           dailyStock: data.dailyStock || "",
           available: data.available || "",
           qty: 1,
+          scanCodeUrl: barcodeImageUrl(data.barcode || code),
           scanTime: nowText()
         };
 
@@ -447,29 +559,38 @@
       list.innerHTML = history
         .slice()
         .reverse()
-        .map(item => `
-          <div class="card">
-            <div class="card-top">
-              <div class="no">${item.no}</div>
-              <div class="sku">${escapeHtml(item.sku)}</div>
-              <div class="qty">QTY ${item.qty}</div>
+        .map(item => {
+          const barcodeUrl = item.scanCodeUrl || barcodeImageUrl(item.barcode);
+
+          return `
+            <div class="card">
+              <div class="card-top">
+                <div class="no">${escapeHtml(item.no)}</div>
+                <div class="sku">${escapeHtml(item.sku)}</div>
+                <div class="qty">QTY ${escapeHtml(item.qty)}</div>
+              </div>
+
+              <div class="barcode-wrap">
+                <div class="barcode-label">SCAN CODE</div>
+                <img class="barcode-img" src="${barcodeUrl}" alt="Scan code">
+              </div>
+
+              <div class="info">
+                <div class="label">BARCODE</div>
+                <div class="value">${escapeHtml(item.barcode)}</div>
+
+                <div class="label">Daily Stock</div>
+                <div class="value">${escapeHtml(item.dailyStock)}</div>
+
+                <div class="label">Available</div>
+                <div class="value">${escapeHtml(item.available)}</div>
+
+                <div class="label">Scan Time</div>
+                <div class="value">${escapeHtml(item.scanTime)}</div>
+              </div>
             </div>
-
-            <div class="info">
-              <div class="label">BARCODE</div>
-              <div>${escapeHtml(item.barcode)}</div>
-
-              <div class="label">Daily Stock</div>
-              <div>${escapeHtml(item.dailyStock)}</div>
-
-              <div class="label">Available</div>
-              <div>${escapeHtml(item.available)}</div>
-
-              <div class="label">Scan Time</div>
-              <div>${escapeHtml(item.scanTime)}</div>
-            </div>
-          </div>
-        `)
+          `;
+        })
         .join("");
     }
 
@@ -477,7 +598,7 @@
       const map = {};
 
       history.forEach(item => {
-        const sku = item.sku || "";
+        const sku = String(item.sku || "").trim();
         const qty = Number(item.qty || 1);
 
         if (!sku) return;
@@ -485,7 +606,7 @@
       });
 
       return Object.keys(map).map(sku => ({
-        sku,
+        sku: sku,
         total: map[sku]
       }));
     }
@@ -501,8 +622,8 @@
 
       list.innerHTML = summary.map(item => `
         <div class="summary-row">
-          <div>${escapeHtml(item.sku)}</div>
-          <div class="total">${item.total}</div>
+          <div class="sku-text">${escapeHtml(item.sku)}</div>
+          <div class="total">${escapeHtml(item.total)}</div>
         </div>
       `).join("");
     }
@@ -517,13 +638,15 @@
       const maxRows = Math.max(history.length, summary.length);
 
       const rows = [];
+
       rows.push([
         "No",
         "BARCODE",
         "PRODUCT",
         "DAILY STOCK",
         "AVAILABLE",
-        "QTY",
+        "QTY_",
+        "SCAN CODE URL",
         "SCAN TIME",
         "",
         "TO EACH SKU",
@@ -533,6 +656,7 @@
       for (let i = 0; i < maxRows; i++) {
         const item = history[i] || {};
         const sum = summary[i] || {};
+        const barcodeUrl = item.barcode ? barcodeImageUrl(item.barcode) : "";
 
         rows.push([
           item.no || "",
@@ -541,6 +665,7 @@
           item.dailyStock || "",
           item.available || "",
           item.qty || "",
+          barcodeUrl,
           item.scanTime || "",
           "",
           sum.sku || "",
@@ -554,9 +679,12 @@
 
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const a = document.createElement("a");
+
       a.href = URL.createObjectURL(blob);
       a.download = "quantity_scan_history.csv";
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
 
       setStatus("CSV downloaded.", "success");
     }
@@ -568,9 +696,14 @@
       }
 
       try {
+        if (!API_URL || API_URL.includes("PASTE_YOUR_APPS_SCRIPT")) {
+          setStatus("API_URL ထဲမှာ Apps Script Web App URL ထည့်ပါ။", "error");
+          return;
+        }
+
         setStatus("Saving to Google Sheet...");
 
-        const payload = JSON.stringify({ history });
+        const payload = JSON.stringify({ history: history });
 
         const form = new URLSearchParams();
         form.append("action", "saveHistory");
@@ -596,7 +729,9 @@
     }
 
     function clearHistory() {
-      if (!confirm("Scan history အကုန်ဖျက်မလား?")) return;
+      if (!confirm("Scan history အကုန်ဖျက်မလား?")) {
+        return;
+      }
 
       history = [];
       saveLocal();
@@ -614,9 +749,10 @@
         gain.connect(audioCtx.destination);
 
         oscillator.frequency.value = 900;
-        gain.gain.value = 0.12;
+        gain.gain.value = 0.15;
 
         oscillator.start();
+
         setTimeout(() => {
           oscillator.stop();
           audioCtx.close();
@@ -625,11 +761,15 @@
     }
 
     function vibrateSuccess() {
-      if (navigator.vibrate) navigator.vibrate(80);
+      if (navigator.vibrate) {
+        navigator.vibrate(80);
+      }
     }
 
     function vibrateError() {
-      if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
+      if (navigator.vibrate) {
+        navigator.vibrate([80, 60, 80]);
+      }
     }
 
     function escapeHtml(text) {
